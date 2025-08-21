@@ -1,4 +1,4 @@
-name: Release
+name: Release and Publish
 
 on:
   push:
@@ -6,8 +6,11 @@ on:
       - 'master'
 
 jobs:
-  build-and-release:
+  build-and-publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -19,29 +22,10 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
+      - name: Build and Install
+        run: mvn -B install --file pom.xml
 
-      - name: Run Tests
-        run: mvn -B test --file pom.xml
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
+      - name: Publish to GitHub Packages
+        run: mvn -B deploy --file pom.xml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/spigot-jpa-bridge-1.0-SNAPSHOT.jar
-          asset_name: spigot-jpa-bridge.jar
-          asset_content_type: application/java-archive
