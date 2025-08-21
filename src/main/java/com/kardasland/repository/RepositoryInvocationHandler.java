@@ -31,7 +31,7 @@ public class RepositoryInvocationHandler implements InvocationHandler {
 	}
 
 	@Override
-	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+	public Object invoke(Object proxy, Method method, Object[] args) {
 		String methodName = method.getName();
 		switch (methodName) {
 			case "equals": return proxy == args[0];

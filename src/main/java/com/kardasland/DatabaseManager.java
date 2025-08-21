@@ -11,7 +11,6 @@ import jakarta.persistence.spi.ClassTransformer;
 import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.reflections.Reflections;
@@ -25,7 +24,6 @@ import java.security.CodeSource;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Slf4j
 public class DatabaseManager {
 
 	private final JavaPlugin plugin;
