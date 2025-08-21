@@ -3,6 +3,8 @@ package com.kardasland;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class DatabaseConfig {
@@ -14,4 +16,6 @@ public class DatabaseConfig {
 	private final String password;
 	private final String filePath;
 	private final boolean showSql;
+	private final List<String> packagesToScan;
+
 }

@@ -14,10 +14,13 @@ import lombok.Getter;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.reflections.Reflections;
+import org.reflections.scanners.Scanners;
+import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 
 import javax.sql.DataSource;
 import java.net.URL;
+import java.security.CodeSource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -39,12 +42,8 @@ public class DatabaseManager {
 		properties.put("hibernate.hbm2ddl.auto", "update");
 		properties.put("hibernate.show_sql", String.valueOf(config.isShowSql()));
 		properties.put("hibernate.format_sql", "true");
-		URL pluginJarUrl = plugin.getClass().getProtectionDomain().getCodeSource().getLocation();
-		ConfigurationBuilder configBuilder = new ConfigurationBuilder()
-			.addClassLoaders(plugin.getClass().getClassLoader())
-			.addUrls(pluginJarUrl);
 
-		Reflections reflections = new Reflections(configBuilder);
+		Reflections reflections = instantiateReflections(config);
 
 		Set<Class<?>> entityClasses = reflections.getTypesAnnotatedWith(Entity.class);
 		plugin.getLogger().info("Found entities: " + entityClasses.stream().map(Class::getSimpleName).collect(Collectors.joining(", ")));
@@ -54,6 +53,27 @@ public class DatabaseManager {
 				createPersistenceUnitInfo(plugin.getName(), entityClasses, dataSource),
 				properties
 			);
+	}
+
+	private Reflections instantiateReflections(DatabaseConfig config) {
+		ClassLoader pluginCl = plugin.getClass().getClassLoader();
+		ClassLoader ctxCl = Thread.currentThread().getContextClassLoader();
+		List<ClassLoader> loaders = Arrays.asList(pluginCl, ctxCl);
+		Set<URL> urls = new LinkedHashSet<>(ClasspathHelper.forClassLoader(loaders.toArray(ClassLoader[]::new)));
+		if (config.getPackagesToScan() != null) {
+			for (String pkg : config.getPackagesToScan()) {
+				urls.addAll(ClasspathHelper.forPackage(pkg, loaders.toArray(ClassLoader[]::new)));
+			}
+		}
+		CodeSource cs = plugin.getClass().getProtectionDomain().getCodeSource();
+		if (cs != null && cs.getLocation() != null) {
+			urls.add(cs.getLocation());
+		}
+		ConfigurationBuilder cfg = new ConfigurationBuilder()
+			.addClassLoaders(loaders.toArray(ClassLoader[]::new))
+			.setUrls(urls)
+			.setScanners(Scanners.TypesAnnotated);
+		return new Reflections(cfg);
 	}
 
 	private HikariDataSource getHikariDataSource(DatabaseConfig config) {

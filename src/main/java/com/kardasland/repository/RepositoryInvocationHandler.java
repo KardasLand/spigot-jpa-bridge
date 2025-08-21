@@ -31,7 +31,7 @@ public class RepositoryInvocationHandler implements InvocationHandler {
 	}
 
 	@Override
-	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+	public Object invoke(Object proxy, Method method, Object[] args) {
 		String methodName = method.getName();
 		switch (methodName) {
 			case "equals": return proxy == args[0];
@@ -63,7 +63,6 @@ public class RepositoryInvocationHandler implements InvocationHandler {
 				String jpql = buildJpqlFromMethodName(methodName, baseSelect);
 				TypedQuery<?> query = em.createQuery(jpql, entityType);
 
-				plugin.getLogger().info("test 1");
 				if (args != null) {
 					for (int i = 0; i < args.length; i++) {
 						query.setParameter("arg" + i, args[i]);
